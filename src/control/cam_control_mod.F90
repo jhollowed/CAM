@@ -33,6 +33,7 @@ logical, protected :: adiabatic         ! true => no physics
 logical, protected :: ideal_phys        ! true => run Held-Suarez (1994) physics
 logical, protected :: kessler_phys      ! true => run Kessler physics
 logical, protected :: tj2016_phys       ! true => run tj2016 physics
+logical, protected :: whs1998_phys      ! true => run whs1998 physics --JH--
 logical, protected :: simple_phys       ! true => adiabatic or ideal_phys or kessler_phys
                                         !         or tj2016
 logical, protected :: aqua_planet       ! Flag to run model in "aqua planet" mode
@@ -135,8 +136,11 @@ subroutine cam_ctrl_set_physics_type(phys_package)
   ideal_phys = trim(phys_package) == 'held_suarez'
   kessler_phys = trim(phys_package) == 'kessler'
   tj2016_phys = trim(phys_package) == 'tj2016'
+  whs1998_phys = trim(phys_package) == 'whs1998' ! --JH--
 
-  simple_phys = adiabatic .or. ideal_phys .or. kessler_phys .or. tj2016_phys
+  ! --JH--
+  !simple_phys = adiabatic .or. ideal_phys .or. kessler_phys .or. tj2016_phys
+  simple_phys = adiabatic .or. ideal_phys .or. kessler_phys .or. tj2016_phys .or. whs1998_phys
 
   moist_physics = .not. (adiabatic .or. ideal_phys)
 
@@ -154,6 +158,9 @@ subroutine cam_ctrl_set_physics_type(phys_package)
       write(iulog,*) 'Run model with Kessler warm-rain physics forcing'
     else if (tj2016_phys) then
       write(iulog,*) 'Run model with Thatcher-Jablonowski (2016) physics forcing (moist Held-Suarez)'
+    else if (whs1998_phys) then
+      !--JH--
+      write(iulog,*) 'Run model with Williamson (1998) modification to dry Hels_Suarez physics forcing'
     end if
   end if
 

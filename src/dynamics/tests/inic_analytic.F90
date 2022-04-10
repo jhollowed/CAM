@@ -43,6 +43,7 @@ CONTAINS
     use cam_initfiles,        only: pertlim
 #ifdef ANALYTIC_IC
     use ic_held_suarez,            only: hs94_set_ic
+    use ic_whs1998,                only: whs98_set_ic
     use ic_baroclinic,             only: bc_wav_set_ic
     use ic_baro_dry_jw06,          only: bc_dry_jw06_set_ic
     use ic_us_standard_atmosphere, only: us_std_atm_set_ic
@@ -161,6 +162,10 @@ CONTAINS
     select case(trim(analytic_ic_type))
     case('held_suarez_1994')
       call hs94_set_ic(latvals, lonvals, U=U, V=V, T=T, PS=PS, PHIS=PHIS_OUT,     &
+           Q=Q, m_cnst=m_cnst, mask=mask_use, verbose=verbose_use)
+    
+   case('whs1998')
+      call whs98_set_ic(latvals, lonvals, U=U, V=V, T=T, PS=PS, PHIS=PHIS_OUT,     &
            Q=Q, m_cnst=m_cnst, mask=mask_use, verbose=verbose_use)
 
     case('moist_baroclinic_wave_dcmip2016', 'dry_baroclinic_wave_dcmip2016')

@@ -4920,7 +4920,7 @@ Default:
 </entry>
 
 <entry id="cam_take_snapshot_before" type="char*32"  category="diagnostics"
-       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,user_set" >
+       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,clock_tracers_timestep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,whs1998_tend,user_set" >
 Name of parameterization to take snapshot before running
 user_set is used when a user inserts a call to cam_snapshot_all_outfld
   using cam_snapshot_before_num as the first argument.
@@ -4928,7 +4928,7 @@ Default: Unused
 </entry>
 
 <entry id="cam_take_snapshot_after" type="char*32"  category="diagnostics"
-       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,user_set" >
+       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,clock_tracers_timestep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,whs1998_tend,user_set" >
 Name of parameterization to take snapshot after running
 user_set is used when a user inserts a call to cam_snapshot_all_outfld
   using cam_snapshot_after_num as the first argument.
@@ -5431,9 +5431,24 @@ by the user.  It will be set by build-namelist to be consistent with the
 Default: set by configure
 </entry>
 
+<entry id="clock_tracers_flag" type="logical" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+If true age of air clock tracers are included.  This variable should not be set
+by the user.  It will be set by build-namelist to be consistent with the
+'-aoa_clock_trcs' argument specified to configure.
+Default: set by configure
+</entry>
+
 <entry id="aoa_read_from_ic_file" type="logical" category="test_tracers"
        group="aoa_tracers_nl" valid_values="" >
 If true age of air tracers are read from the initial conditions file.
+If this is not specified then they are not read from IC file.
+Default: TRUE
+</entry>
+
+<entry id="clock_read_from_ic_file" type="logical" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+If true age of air clock tracers are read from the initial conditions file.
 If this is not specified then they are not read from IC file.
 Default: TRUE
 </entry>
@@ -7976,12 +7991,13 @@ Default: FALSE
 
 <entry id="analytic_ic_type" type="char*80" category="dyn_test"
        group="analytic_ic_nl"
-       valid_values="none,held_suarez_1994,moist_baroclinic_wave_dcmip2016,dry_baroclinic_wave_dcmip2016,dry_baroclinic_wave_jw2006,us_standard_atmosphere" >
+       valid_values="none,held_suarez_1994,moist_baroclinic_wave_dcmip2016,dry_baroclinic_wave_dcmip2016,dry_baroclinic_wave_jw2006,whs1998,us_standard_atmosphere" >
 Specify the type of analytic initial conditions for an initial run.
 held_suarez_1994: Initial conditions specified in Held and Suarez (1994)
 moist_baroclinic_wave_dcmip2016: Moist baroclinic wave as used in the DCMIP 2016 experiments
 dry_baroclinic_wave_dcmip2016: Dry baroclinic wave as used in the DCMIP 2016 experiments
 dry_baroclinic_wave_jw2006: Dry baroclinic wave as specified in Jablonowski and Williamson (2006)
+whs1998: Modified Held Suarez configuration as specified in Williamson (1998)
 us_standard_atmosphere: static atmospheric state (u,v)=0, standard lapse rate for T, PS is hydrostatic equilibrium with topography
 (this ic is recommended for spinning up new initial condition files when changing horizontal or vertical resolution)
 Default: 'none'

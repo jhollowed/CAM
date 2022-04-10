@@ -94,6 +94,8 @@ CONTAINS
        select case(trim(analytic_ic_type))
        case('held_suarez_1994')
           msg = 'Dynamics state will be set to Held-Suarez (1994) initial conditions.'
+       case('whs1998')
+          msg = 'Dynamics state will be set to Williamson modification (1998) of Held-Suarez initial conditions.'
        case('moist_baroclinic_wave_dcmip2016')
           moist = .true.
           msg = 'Dynamics state will be set to a moist baroclinic wave initial condition used in DCMIP 2016.'

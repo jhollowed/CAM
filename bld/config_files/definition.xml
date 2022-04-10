@@ -52,8 +52,8 @@ Option to turn on waccmx thermosphere/ionosphere extension: 0 => no, 1 => yes
 <entry id="ionosphere" valid_values="none,wxie" value="none">
 Ionosphere model used in WACCMX.
 </entry>
-<entry id="phys" valid_values="cam3,cam4,cam5,cam6,cam_dev,held_suarez,adiabatic,kessler,tj2016,spcam_sam1mom,spcam_m2005" value="">
-Physics package: cam3, cam4, cam5, cam6, cam_dev, held_suarez, adiabatic, kessler, tj2016, spcam_sam1mom, spcam_m2005.
+<entry id="phys" valid_values="cam3,cam4,cam5,cam6,cam_dev,held_suarez,adiabatic,kessler,tj2016,whs1998,spcam_sam1mom,spcam_m2005" value="">
+Physics package: cam3, cam4, cam5, cam6, cam_dev, held_suarez, adiabatic, kessler, tj2016, whs1998, spcam_sam1mom, spcam_m2005.
 </entry>
 <entry id="microphys" valid_values="rk,mg1,mg2,mg3,spcam_m2005,spcam_sam1mom,none" value="">
 Microphysics package: rk (Rasch and Kristjansson), mg1 (Morrison and
@@ -178,6 +178,10 @@ Total number of advected test tracers.
 </entry>
 <entry id="age_of_air_trcs" valid_values="0,1" value="0">
 Switch on (off) age of air tracers: 0=off, 1=on.
+</entry>
+</entry>
+<entry id="aoa_clock_trcs" valid_values="0,1" value="0">
+Switch on (off) age of air clock tracers: 0=off, 1=on.
 </entry>
 <entry id="max_n_rad_cnst" value="30">
 Maximum number of constituents that are radiatively active or in any one

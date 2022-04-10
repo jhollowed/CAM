@@ -19,7 +19,7 @@ module physpkg
   use camsrfexch,      only: cam_out_t, cam_in_t, cam_export
 
   ! Note: ideal_phys is true for Held-Suarez (1994) physics
-  use cam_control_mod, only: moist_physics, adiabatic, ideal_phys, kessler_phys, tj2016_phys
+  use cam_control_mod, only: moist_physics, adiabatic, ideal_phys, kessler_phys, tj2016_phys, whs1998_phys
   use phys_control,    only: phys_getopts
   use perf_mod,        only: t_barrierf, t_startf, t_stopf, t_adj_detailf
   use cam_logfile,     only: iulog
@@ -78,6 +78,10 @@ contains
     use check_energy,       only: check_energy_register
     use kessler_cam,        only: kessler_register
     use tj2016_cam,         only: thatcher_jablonowski_register
+    
+    !--JH--
+    use aoa_tracers,        only: aoa_tracers_register
+    use clock_tracers,      only: clock_tracers_register
 
     !---------------------------Local variables-----------------------------
     !
@@ -124,6 +128,11 @@ contains
 
     ! Register diagnostics PBUF
     call diag_register()
+    
+    ! --JH--
+    ! Register age of air tracers
+    call aoa_tracers_register()
+    call clock_tracers_register()
 
     ! register chemical constituents including aerosols ...
     call chem_register()
@@ -191,6 +200,7 @@ contains
     use chemistry,          only: chem_init, chem_is_active
     use cam_diagnostics,    only: diag_init
     use held_suarez_cam,    only: held_suarez_init
+    use whs1998_cam,        only: whs1998_init
     use kessler_cam,        only: kessler_cam_init
     use tj2016_cam,         only: thatcher_jablonowski_init
     use tracers,            only: tracers_init
@@ -198,6 +208,10 @@ contains
     use phys_debug_util,    only: phys_debug_init
     use qneg_module,        only: qneg_init
     use cam_snapshot,       only: cam_snapshot_init
+    
+    !--JH--
+    use aoa_tracers,        only: aoa_tracers_init
+    use clock_tracers,      only: clock_tracers_init
 
     ! Input/output arguments
     type(physics_state), pointer       :: phys_state(:)
@@ -241,6 +255,11 @@ contains
     if (kessler_phys .or. tj2016_phys) then
       call wv_sat_init()
     end if
+    
+    !--JH--
+    ! age of air tracers
+    call aoa_tracers_init()
+    call clock_tracers_init()
 
     call tracers_init()
 
@@ -254,6 +273,8 @@ contains
       call kessler_cam_init(pbuf2d)
     else if (tj2016_phys) then
       call thatcher_jablonowski_init(pbuf2d)
+    else if (whs1998_phys) then
+      call whs1998_init(pbuf2d)
     end if
 
     if (chem_is_active()) then
@@ -471,6 +492,14 @@ contains
     use dycore,          only: dycore_is
     use check_energy,    only: calc_te_and_aam_budgets
     use cam_history,     only: hist_fld_active
+    
+    !--JH--
+    use aoa_tracers,        only: aoa_tracers_timestep_tend
+    use clock_tracers,      only: clock_tracers_timestep_tend
+    use physics_types,      only: physics_update
+    use time_manager,       only: get_nstep
+    use check_energy,       only: check_tracers_data, check_tracers_init, check_tracers_chng
+    use cam_logfile,        only: iulog
 
     ! Arguments
     !
@@ -498,6 +527,11 @@ contains
     integer                                  :: ncol
     integer                                  :: itim_old
     logical                                  :: moist_mixing_ratio_dycore
+    
+    !--JH--
+    integer                             :: nstep       ! current timestep number 
+    real(r8)                            :: zero(pcols) ! array of zeros
+    type(check_tracers_data)            :: tracerint   ! energy integrals and cummulative boundary fluxes
 
     real(r8) :: tmp_trac  (pcols,pver,pcnst) ! tmp space
     real(r8) :: tmp_pdel  (pcols,pver)       ! tmp space
@@ -524,6 +558,69 @@ contains
       allocate(cldiceini(pcols, pver))
       cldiceini = 0.0_r8
     end if
+    
+    !--JH--
+    ! ========== AOA Begin =========== 
+
+    !--JH--
+    ! t_startf, t_stopf: timing routines 
+    ! physics_update(): Update the state and or tendency structure with the parameterization tendencies
+    ! check_tracers_init(): initialize tracer integrals and cumulative boundary fluxes 
+    ! check_tracers_chng(): Check that the tracers and water change matches the boundary fluxes 
+    ! tracers_timestep_forcing(): Aman : function created to force tracer boundary value each time step
+    ! aoa_tracers_timestep_tend(): update AOA tracer tendencies via aoa_tracers.F90 
+    
+    call t_startf('tphysac_init')
+    ! get nstep and zero array for energy checker
+    zero = 0._r8 
+    nstep = get_nstep()
+    call check_tracers_init(state, tracerint) 
+    call t_stopf('tphysac_init') 
+    
+    !=================================================== 
+    ! Source/sink terms for advected tracers. 
+    !=================================================== 
+    
+    ! JH: Evolving AOA tracers and updating physics; this copied from physics/cam/physpkg.F90 
+    call t_startf('adv_tracer_src_sink') 
+    
+    if (trim(cam_take_snapshot_before) == "aoa_tracers_timestep_tend") then
+       call cam_snapshot_all_outfld_tphysac(cam_snapshot_before_num, state, tend, cam_in, cam_out, pbuf,&
+                    fh2o, surfric, obklen, flx_heat)
+    end if
+    call aoa_tracers_timestep_tend(state, ptend, cam_in%cflx, cam_in%landfrac, ztodt)
+    if ( (trim(cam_take_snapshot_after) == "aoa_tracers_timestep_tend") .and. &
+         (trim(cam_take_snapshot_before) == trim(cam_take_snapshot_after))) then
+       call cam_snapshot_ptend_outfld(ptend, lchnk)
+    end if
+    call physics_update(state, ptend, ztodt, tend)
+    if (trim(cam_take_snapshot_after) == "aoa_tracers_timestep_tend") then
+       call cam_snapshot_all_outfld_tphysac(cam_snapshot_after_num, state, tend, cam_in, cam_out, pbuf,&
+                    fh2o, surfric, obklen, flx_heat)
+    end if
+    call check_tracers_chng(state, tracerint, "aoa_tracers_timestep_tend", nstep, ztodt,   &
+         cam_in%cflx)
+    
+     if (trim(cam_take_snapshot_before) == "clock_tracers_timestep_tend") then
+       call cam_snapshot_all_outfld_tphysac(cam_snapshot_before_num, state, tend, cam_in, cam_out, pbuf,&
+                    fh2o, surfric, obklen, flx_heat)
+    end if
+    call clock_tracers_timestep_tend(state, ptend, cam_in%cflx, cam_in%landfrac, ztodt)
+    if ( (trim(cam_take_snapshot_after) == "clock_tracers_timestep_tend") .and. &
+         (trim(cam_take_snapshot_before) == trim(cam_take_snapshot_after))) then
+       call cam_snapshot_ptend_outfld(ptend, lchnk)
+    end if
+    call physics_update(state, ptend, ztodt, tend)
+    if (trim(cam_take_snapshot_after) == "clock_tracers_timestep_tend") then
+       call cam_snapshot_all_outfld_tphysac(cam_snapshot_after_num, state, tend, cam_in, cam_out, pbuf,&
+                    fh2o, surfric, obklen, flx_heat)
+    end if
+    call check_tracers_chng(state, tracerint, "clock_tracers_timestep_tend", nstep, ztodt,   &
+         cam_in%cflx)
+    
+    call t_stopf('adv_tracer_src_sink') 
+    
+    ! JH: =========== AOA End ==============
 
     !=========================
     ! Compute physics tendency
@@ -650,6 +747,7 @@ contains
     use check_energy,      only: calc_te_and_aam_budgets
     use chemistry,         only: chem_is_active, chem_timestep_tend
     use held_suarez_cam,   only: held_suarez_tend
+    use whs1998_cam,       only: whs1998_tend
     use kessler_cam,       only: kessler_tend
     use tj2016_cam,        only: thatcher_jablonowski_precip_tend
     use dycore,            only: dycore_is
@@ -795,6 +893,23 @@ contains
       if (trim(cam_take_snapshot_after) == "held_suarez_tend") then
          call cam_snapshot_all_outfld(cam_snapshot_after_num, state, tend, cam_in, cam_out, pbuf)
       end if
+    
+    else if (whs1998_phys) then
+
+      if (trim(cam_take_snapshot_before) == "whs1998_tend") then
+         call cam_snapshot_all_outfld(cam_snapshot_before_num, state, tend, cam_in, cam_out, pbuf)
+      end if
+
+      call whs1998_tend(state, ptend, ztodt)
+      if ( (trim(cam_take_snapshot_after) == "whs1998_tend") .and.       &
+           (trim(cam_take_snapshot_before) == trim(cam_take_snapshot_after))) then
+         call cam_snapshot_ptend_outfld(ptend, lchnk)
+      end if
+      call physics_update(state, ptend, ztodt, tend)
+
+      if (trim(cam_take_snapshot_after) == "whs1998_tend") then
+         call cam_snapshot_all_outfld(cam_snapshot_after_num, state, tend, cam_in, cam_out, pbuf)
+      end if
 
     else if (kessler_phys) then
 
@@ -889,6 +1004,9 @@ contains
     !--------------------------------------------------------------------------
     use physics_types,       only: physics_state
     use physics_buffer,      only: physics_buffer_desc
+    
+    !--JH--
+    use aoa_tracers,         only: aoa_tracers_timestep_init
 
     implicit none
 
@@ -899,6 +1017,10 @@ contains
     type(physics_buffer_desc), pointer                 :: pbuf2d(:,:)
 
     !--------------------------------------------------------------------------
+    
+    !--JH--
+    ! age of air tracers
+    call aoa_tracers_timestep_init(phys_state)
 
   end subroutine phys_timestep_init
 
