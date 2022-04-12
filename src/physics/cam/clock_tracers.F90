@@ -38,9 +38,6 @@ module clock_tracers
   ! constituent names
   character(len=8), parameter :: c_names(ncnst) = (/'CLOCK1', 'CLOCK2'/)
 
-  ! constituent source/sink names
-  character(len=8), parameter :: src_names(ncnst) = (/'CLOCK1SRC', 'CLOCK2SRC'/)
-
   integer :: ifirst ! global index of first constituent
   integer :: ixclock1 ! global index for CLOCK1 tracer
   integer :: ixclock2 ! global index for CLOCK2 tracer
@@ -207,10 +204,8 @@ subroutine clock_tracers_readnl(nlfile)
     do m = 1, ncnst
        mm = ifirst+m-1
        call addfld(cnst_name(mm), (/ 'lev' /), 'A', 'kg/kg', cnst_longname(mm))
-       call addfld(src_names(m),  (/ 'lev' /), 'A', 'kg/kg/s', trim(cnst_name(mm))//' source/sink')
 
        call add_default (cnst_name(mm), 1, ' ')
-       call add_default (src_names(m),  1, ' ')
     end do
 
   end subroutine clock_tracers_init
@@ -308,16 +303,10 @@ subroutine clock_tracers_readnl(nlfile)
        end do
     end do
 
-    ! record tendencies on history files
-    call outfld (src_names(1), ptend%q(:,:,ixclock1), pcols, lchnk)
-    call outfld (src_names(2), ptend%q(:,:,ixclock2), pcols, lchnk)
-
     ! Set tracer surface fluxes to zero
     do i = 1, ncol
-       ! CLOCK1
-       cflx(i,ixclock1) = 1.e-6_r8
-       ! CLOCK2
-       cflx(i,ixclock2) = 1.e-6_r8
+       cflx(i,ixclock1) = 0.0_r8
+       cflx(i,ixclock2) = 0.0_r8
     end do
 
   end subroutine clock_tracers_timestep_tend

@@ -142,7 +142,6 @@ contains
     use prescribed_ghg,     only: prescribed_ghg_register
     use sslt_rebin,         only: sslt_rebin_register
     use aoa_tracers,        only: aoa_tracers_register
-    use clock_tracers,      only: clock_tracers_register
     use aircraft_emit,      only: aircraft_emit_register
     use cam_diagnostics,    only: diag_register
     use cloud_diagnostics,  only: cloud_diagnostics_register
@@ -153,6 +152,10 @@ contains
     use dyn_comp,           only: dyn_register
     use spcam_drivers,      only: spcam_register
     use offline_driver,     only: offline_driver_reg
+    
+    !--JH--
+    use clock_tracers,      only: clock_tracers_register
+    use sai_tracers,        only: sai_tracers_register
 
     !---------------------------Local variables-----------------------------
     !
@@ -326,7 +329,10 @@ contains
 
     ! Register age of air tracers
     call aoa_tracers_register()
+
+    !--JH-- Register modified age of air, SAI consituents
     call clock_tracers_register()
+    call sai_tracers_register()
 
     ! Register test tracers
     call tracers_register()
@@ -738,7 +744,6 @@ contains
     use spcam_drivers,      only: spcam_init
     use tracers,            only: tracers_init
     use aoa_tracers,        only: aoa_tracers_init
-    use clock_tracers,      only: clock_tracers_init
     use rayleigh_friction,  only: rayleigh_friction_init
     use pbl_utils,          only: pbl_utils_init
     use vertical_diffusion, only: vertical_diffusion_init
@@ -767,6 +772,10 @@ contains
     use cam_snapshot,       only: cam_snapshot_init
     use cam_history,        only: addfld, register_vector_field, add_default
     use phys_control,       only: phys_getopts
+    
+    !--JH--
+    use clock_tracers,      only: clock_tracers_init
+    use sai_tracers,        only: sai_tracers_init
 
     ! Input/output arguments
     type(physics_state), pointer       :: phys_state(:)
@@ -816,7 +825,10 @@ contains
 
     ! age of air tracers
     call aoa_tracers_init()
+    
+    !--JH-- init modified age of air, SAI consituents
     call clock_tracers_init()
+    call sai_tracers_init()
 
     teout_idx = pbuf_get_index( 'TEOUT')
 
@@ -1353,7 +1365,6 @@ contains
     use waccmx_phys_intr,   only: waccmx_phys_mspd_tend  ! WACCM-X major diffusion
     use waccmx_phys_intr,   only: waccmx_phys_ion_elec_temp_tend ! WACCM-X
     use aoa_tracers,        only: aoa_tracers_timestep_tend
-    use clock_tracers,      only: clock_tracers_timestep_tend
     use physconst,          only: rhoh2o, latvap,latice
     use dyn_tests_utils,    only: vc_dycore
     use aero_model,         only: aero_model_drydep
@@ -1380,6 +1391,10 @@ contains
     use cam_snapshot,       only: cam_snapshot_all_outfld_tphysac
     use cam_snapshot_common,only: cam_snapshot_ptend_outfld
     use lunar_tides,        only: lunar_tides_tend
+    
+    !--JH--
+    use clock_tracers,      only: clock_tracers_timestep_tend
+    use sai_tracers,        only: sai_tracers_timestep_tend
 
     !
     ! Arguments
@@ -1535,8 +1550,9 @@ contains
     end if
     call check_tracers_chng(state, tracerint, "aoa_tracers_timestep_tend", nstep, ztodt,   &
          cam_in%cflx)
-    
-     if (trim(cam_take_snapshot_before) == "clock_tracers_timestep_tend") then
+   
+    !--JH-- begin mods 
+    if (trim(cam_take_snapshot_before) == "clock_tracers_timestep_tend") then
        call cam_snapshot_all_outfld_tphysac(cam_snapshot_before_num, state, tend, cam_in, cam_out, pbuf,&
                     fh2o, surfric, obklen, flx_heat)
     end if
@@ -1552,6 +1568,24 @@ contains
     end if
     call check_tracers_chng(state, tracerint, "clock_tracers_timestep_tend", nstep, ztodt,   &
          cam_in%cflx)
+    
+    if (trim(cam_take_snapshot_before) == "sai_tracers_timestep_tend") then
+       call cam_snapshot_all_outfld_tphysac(cam_snapshot_before_num, state, tend, cam_in, cam_out, pbuf,&
+                    fh2o, surfric, obklen, flx_heat)
+    end if
+    call sai_tracers_timestep_tend(state, ptend, cam_in%cflx, cam_in%landfrac, ztodt)
+    if ( (trim(cam_take_snapshot_after) == "sai_tracers_timestep_tend") .and. &
+         (trim(cam_take_snapshot_before) == trim(cam_take_snapshot_after))) then
+       call cam_snapshot_ptend_outfld(ptend, lchnk)
+    end if
+    call physics_update(state, ptend, ztodt, tend)
+    if (trim(cam_take_snapshot_after) == "sai_tracers_timestep_tend") then
+       call cam_snapshot_all_outfld_tphysac(cam_snapshot_after_num, state, tend, cam_in, cam_out, pbuf,&
+                    fh2o, surfric, obklen, flx_heat)
+    end if
+    call check_tracers_chng(state, tracerint, "sai_tracers_timestep_tend", nstep, ztodt,   &
+         cam_in%cflx)
+    !--JH-- end mods 
 
     if (trim(cam_take_snapshot_before) == "co2_cycle_set_ptend") then
        call cam_snapshot_all_outfld_tphysac(cam_snapshot_before_num, state, tend, cam_in, cam_out, pbuf,&

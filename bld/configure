@@ -53,6 +53,8 @@ OPTIONS
   effect whether running CAM from CESM scripts or running via CAM standalone scripts:
 
      -[no]age_of_air_trcs Switch on [off] age of air tracers. Default: on for waccm_phys, otherwise off.
+     -[no]aoa_clock_trcs (JH) Switch on [off] modified AOA clock tracers. Default: off
+     -[no]sai_trcs (JH) Switch on [off] stratospheric aerosol injection tracers. Default: off
      -analytic_ic       Enables the (namelist controlled) dycore testing infrastructure
      -aquaplanet        Switch on aqua-planet mode.
      -build_chem_proc   Switch forces the build of the chemistry preprocessor (primarily for testing).
@@ -234,7 +236,8 @@ my %opts = (
             );
 GetOptions(
     "age_of_air_trcs!"          => \$opts{'age_of_air_trcs'},
-    "aoa_clock_trcs"            => \$opts{'aoa_clock_trcs'},
+    "aoa_clock_trcs"            => \$opts{'aoa_clock_trcs'},   #--JH--
+    "sai_trcs"                  => \$opts{'sai_trcs'},         #--JH--
     "analytic_ic"               => \$opts{'analytic_ic'},
     "aquaplanet"                => \$opts{'aquaplanet'},
     "build_chem_proc"           => \$opts{'build_chem_proc'},
@@ -717,12 +720,20 @@ my $age_of_air_trcs = $cfg_ref->get('age_of_air_trcs') ? "ON" : "OFF";
 
 if ($print>=2) { print "Age of air tracer package: $age_of_air_trcs$eol"; }
 
+#--JH--: add clock, sai tracers
 if (defined $opts{'aoa_clock_trcs'}) {
     $cfg_ref->set('aoa_clock_trcs', $opts{'aoa_clock_trcs'});
 }
 my $aoa_clock_trcs = $cfg_ref->get('aoa_clock_trcs') ? "ON" : "OFF";
 
 if ($print>=2) { print "Age of air clock tracer package: $aoa_clock_trcs$eol"; }
+
+if (defined $opts{'sai_trcs'}) {
+    $cfg_ref->set('sai_trcs', $opts{'sai_trcs'});
+}
+my $sai_trcs = $cfg_ref->get('sai_trcs') ? "ON" : "OFF";
+
+if ($print>=2) { print "SAI tracer package: $aoa_clock_trcs$eol"; }
 
 # waccmx option
 if (defined $opts{'waccmx'}) {
@@ -1549,9 +1560,18 @@ else {
     $nadv += $ttrac_nadv;
     if ($print>=2 and $ttrac_nadv) { print "Advected constituents added by test tracer package: $ttrac_nadv$eol"; }
 
+    # --JH--: AOA, clock, and sai should add their default number of consituents
     if ($age_of_air_trcs eq "ON") {
         $nadv += 4;
         if ($print>=2) { print "Advected constituents added by the age of air tracer package: 4$eol"; }
+    }
+    if ($aoa_clock_trcs eq "ON") {
+        $nadv += 2;
+        if ($print>=2) { print "--JH--: Advected constituents added by the clock tracer package: 2$eol"; }
+    }
+    if ($sai_trcs eq "ON") {
+        $nadv += 5;
+        if ($print>=2) { print "--JH--:Advected constituents added by the SAI tracer package: 5$eol"; }
     }
 
     $cfg_ref->set('nadv', $nadv);

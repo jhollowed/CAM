@@ -342,6 +342,12 @@
 <analytic_ic_type phys="tj2016"     > moist_baroclinic_wave_dcmip2016 </analytic_ic_type>
 <analytic_ic_type phys="whs1998"    > whs1998 </analytic_ic_type>
 
+<!-- JH: SAI namelist settings  -->
+<sai_duration   >   48.0D0  </sai_duration>
+<sai_decay_type >   1       </sai_decay_type>
+<sai_so2_efold  >   2592000 </sai_so2_efold>
+<sai_ash_efold  >   345600  </sai_so2_efold>
+
 <!-- Bulk aerosol physical properties (includes optics) -->
 
 <!-- CAM3 Bulk aerosols.  Optics for CAM-RT -->

@@ -26,7 +26,6 @@ CONTAINS
        verbose, notfound, z)
     use constituents,  only: cnst_name, cnst_read_iv
     use aoa_tracers,   only: aoa_tracers_implements_cnst,   aoa_tracers_init_cnst
-    use clock_tracers,   only: clock_tracers_implements_cnst,   clock_tracers_init_cnst
     use carma_intr,    only: carma_implements_cnst,         carma_init_cnst
     use chemistry,     only: chem_implements_cnst,          chem_init_cnst
     use clubb_intr,    only: clubb_implements_cnst,         clubb_init_cnst
@@ -35,6 +34,10 @@ CONTAINS
     use rk_stratiform, only: rk_stratiform_implements_cnst, rk_stratiform_init_cnst
     use tracers,       only: tracers_implements_cnst,       tracers_init_cnst
     use unicon_cam,    only: unicon_implements_cnst,        unicon_init_cnst
+    
+    ! --JH-- 
+    use clock_tracers,   only: clock_tracers_implements_cnst,   clock_tracers_init_cnst
+    use sai_tracers,   only: sai_tracers_implements_cnst,   sai_tracers_init_cnst
 
     !-----------------------------------------------------------------------
     !
@@ -104,6 +107,11 @@ CONTAINS
       call clock_tracers_init_cnst(trim(name), latvals, lonvals, mask_use, q)
       if(masterproc .and. verbose_use) then
         write(iulog,*) '          ', trim(name), ' initialized by "clock_tracers_init_cnst"'
+      end if
+    else if (sai_tracers_implements_cnst(trim(name))) then
+      call sai_tracers_init_cnst(trim(name), latvals, lonvals, mask_use, q)
+      if(masterproc .and. verbose_use) then
+        write(iulog,*) '          ', trim(name), ' initialized by "sai_tracers_init_cnst"'
       end if
     else if (carma_implements_cnst(trim(name))) then
       call carma_init_cnst(trim(name), latvals, lonvals, mask_use, q)

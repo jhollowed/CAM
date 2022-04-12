@@ -4920,7 +4920,7 @@ Default:
 </entry>
 
 <entry id="cam_take_snapshot_before" type="char*32"  category="diagnostics"
-       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,clock_tracers_timestep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,whs1998_tend,user_set" >
+       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,clock_tracers_timestep_tend,sai_tracers_tiemstep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,whs1998_tend,user_set" >
 Name of parameterization to take snapshot before running
 user_set is used when a user inserts a call to cam_snapshot_all_outfld
   using cam_snapshot_before_num as the first argument.
@@ -4928,7 +4928,7 @@ Default: Unused
 </entry>
 
 <entry id="cam_take_snapshot_after" type="char*32"  category="diagnostics"
-       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,clock_tracers_timestep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,whs1998_tend,user_set" >
+       group="phys_ctl_nl" valid_values="chem_emissions,aoa_tracers_timestep_tend,clock_tracers_timestep_tend,sai_tracers_timestep_tend,co2_cycle_set_ptend,chem_timestep_tend,vertical_diffusion_section,aero_model_drydep,gw_tend,qbo_relax,iondrag_calc_section,physics_dme_adjust,physics_dme_adjust,dadadj_tend,convect_deep_tend,convect_shallow_tend,convect_diagnostics_calc,macrop_driver_tend,clubb_tend_cam,microp_section,microp_driver_tend_subcol,aero_model_wetdep,radiation_tend,held_suarez_tend,kessler_tend,thatcher_jablonowski_precip_tend,whs1998_tend,user_set" >
 Name of parameterization to take snapshot after running
 user_set is used when a user inserts a call to cam_snapshot_all_outfld
   using cam_snapshot_after_num as the first argument.
@@ -5431,6 +5431,15 @@ by the user.  It will be set by build-namelist to be consistent with the
 Default: set by configure
 </entry>
 
+<entry id="aoa_read_from_ic_file" type="logical" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+If true age of air tracers are read from the initial conditions file.
+If this is not specified then they are not read from IC file.
+Default: TRUE
+</entry>
+
+<!-- JH: modified AOA tracers -->
+
 <entry id="clock_tracers_flag" type="logical" category="test_tracers"
        group="aoa_tracers_nl" valid_values="" >
 If true age of air clock tracers are included.  This variable should not be set
@@ -5439,19 +5448,46 @@ by the user.  It will be set by build-namelist to be consistent with the
 Default: set by configure
 </entry>
 
-<entry id="aoa_read_from_ic_file" type="logical" category="test_tracers"
-       group="aoa_tracers_nl" valid_values="" >
-If true age of air tracers are read from the initial conditions file.
-If this is not specified then they are not read from IC file.
-Default: TRUE
-</entry>
-
 <entry id="clock_read_from_ic_file" type="logical" category="test_tracers"
        group="aoa_tracers_nl" valid_values="" >
 If true age of air clock tracers are read from the initial conditions file.
 If this is not specified then they are not read from IC file.
 Default: TRUE
 </entry>
+
+<!-- JH: SAI tracers -->
+
+<entry id="sai_tracers_flag" type="logical" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+If true stratospheric aerosol injection tracers are included.  This variable should not be set
+by the user.  It will be set by build-namelist to be consistent with the
+'-sai_trcs' argument specified to configure.
+Default: set by configure
+</entry>
+
+<entry id="sai_duration" type="real" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+duration of SAI event, in hours. Defaults to 48    
+</entry>
+
+<entry id="sai_decay_type" type="integer" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+The type of time decay to use for the SAI plume amplitude.
+================================
+1     Exponential decay in plume amplitude, with ~97% reduction over first sai_duration hours
+2     Constant plume amplitude for sai_duration hours
+</entry>
+
+<entry id="sai_so2_efold" type="real" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+e-folding timescale for SAI SO2 tracers, in seconds. Defaults to 2,592,000 s (30 days)    
+</entry>
+
+<entry id="sai_ash_efold" type="real" category="test_tracers"
+       group="aoa_tracers_nl" valid_values="" >
+e-folding timescale for SAI ash tracers, in seconds. Defaults to 345,600 s (4 days)    
+</entry>
+
 
 <!-- Time step -->
 

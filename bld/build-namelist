@@ -772,7 +772,10 @@ if ($test_tracer_num > 0) {
 }
 
 if ($cfg->get('age_of_air_trcs')) { add_default($nl, 'aoa_tracers_flag', 'val'=>'.true.'); }
+# --JH--: update default namelist value for modified aoa, sai tracer flags, according to 
+#         options from CAM_CONFIG_OPTS
 if ($cfg->get('aoa_clock_trcs')) { add_default($nl, 'clock_tracers_flag', 'val'=>'.true.'); }
+if ($cfg->get('sai_trcs')) { add_default($nl, 'sai_tracers_flag', 'val'=>'.true.'); }
 
 # If phys option is "cam3" then turn on the CAM3 prescribed ozone and aerosols
 if ($phys eq 'cam3' and !$aqua_mode) {
